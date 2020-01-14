@@ -3,18 +3,21 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	nrHttp "github.com/newrelic/infra-integrations-sdk/http"
 	"github.com/newrelic/nri-f5/src/arguments"
 )
 
 // F5Client represents a client that is able to make requests to the F5 iControl API.
 type F5Client struct {
-	HTTPClient *http.Client
+	HTTPClient *retryablehttp.Client
 	Username   string
 	Password   string
 	AuthToken  string
@@ -30,8 +33,12 @@ func NewClient(args *arguments.ArgumentList) (*F5Client, error) {
 		return nil, err
 	}
 
+	retryablehttpClient := retryablehttp.NewClient()
+	retryablehttpClient.HTTPClient = httpClient
+	retryablehttpClient.Logger = log.New(os.Stderr, "retryablehttp", log.LstdFlags)
+
 	return &F5Client{
-		HTTPClient: httpClient,
+		HTTPClient: retryablehttpClient,
 		Username:   args.Username,
 		Password:   args.Password,
 		AuthToken:  "",
@@ -47,7 +54,7 @@ func (c *F5Client) Request(endpoint string, model interface{}) error {
 // DoRequest makes a request to the given endpoint using the given request body, storing the result in the model if possible.
 // An error is returned if either step cannot be completed.
 func (c *F5Client) DoRequest(method, endpoint, body string, model interface{}) error {
-	req, err := http.NewRequest(method, c.BaseURL+endpoint, strings.NewReader(body))
+	req, err := retryablehttp.NewRequest(method, c.BaseURL+endpoint, strings.NewReader(body))
 	if err != nil {
 		return err
 	}

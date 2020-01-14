@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-f5/src/client"
 	"github.com/stretchr/testify/assert"
@@ -468,7 +469,7 @@ func TestCollectSystem(t *testing.T) {
 		BaseURL:    testServer.URL,
 		Username:   "testUser",
 		Password:   "testPass",
-		HTTPClient: http.DefaultClient,
+		HTTPClient: retryablehttp.NewClient(),
 		AuthToken:  "asdfd",
 	}
 

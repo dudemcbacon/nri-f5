@@ -19,6 +19,7 @@ func CollectPoolMembers(fullPath string, i *integration.Integration, client *cli
 	var memberStats definition.LtmPoolMemberStats
 	if err := client.Request("/mgmt/tm/ltm/pool/"+tildePath+"/members/stats", &memberStats); err != nil {
 		log.Error("Failed to collect inventory: %s", err)
+		return
 	}
 
 	populatePoolMembersInventory(memberStats, i, hostPort)

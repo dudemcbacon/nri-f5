@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/newrelic/nri-f5/src/arguments"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,11 +49,14 @@ func Test_LogIn(t *testing.T) {
 	}))
 	defer func() { testServer.Close() }()
 
+	retryablehttpClient := retryablehttp.NewClient()
+	retryablehttpClient.HTTPClient = http.DefaultClient
+
 	client := F5Client{
 		BaseURL:    testServer.URL,
 		Username:   "testUser",
 		Password:   "testPass",
-		HTTPClient: http.DefaultClient,
+		HTTPClient: retryablehttpClient,
 	}
 
 	err := client.Request("/some-endpoint", nil)
